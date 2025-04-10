@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Coach Resource Hub</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f7f9fa;
+      padding: 20px;
+    }
+    h1 {
+      text-align: center;
+      color: #2c3e50;
+    }
+    .buttons {
+      text-align: center;
+      margin-bottom: 20px;
+    }
+    button {
+      margin: 5px;
+      padding: 10px 15px;
+      border: none;
+      background-color: #2980b9;
+      color: white;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+    button.active {
+      background-color: #1abc9c;
+    }
+    .resource {
+      background: white;
+      padding: 15px;
+      margin-bottom: 15px;
+      border-radius: 8px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    a {
+      color: #2980b9;
+      text-decoration: none;
+    }
+  </style>
+</head>
+<body>
+
+<h1>Coach Development Resource Hub</h1>
+
+<div class="buttons" id="categoryButtons">
+  <button class="active" onclick="filterResources('All')">All</button>
+</div>
+
+<div id="resourceList"></div>
+
+<script>
+  const sheetURL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vRaU9nPEEUtruDD255ZmCw4I4QIVXk2JTahetCCO8Gzgzoza4Fj__Z1cLtuTYCVsT-TFo-QpI3TsuwD/pub?gid=0&single=true&output=csv";
+
+  let resources = [];
+
+  fetch(sheetURL)
+    .then(response => response.text())
+    .then(data => {
+      const rows = data.split("\n").slice(1); // Skip header
+      const categories = new Set();
+
+      rows.forEach(row => {
+        const [title, type, category, link, description] = row.split(",").map(cell => cell.trim().replace(/^"|"$/g, ""));
+        if (!title || !link) return;
+
+        categories.add(category);
+
+        resources.push({ title, type, category, link, description });
+      });
+
+      generateCategoryButtons(Array.from(categories));
+      displayResources(resources);
+    });
+
+  function generateCategoryButtons(categories) {
+    const container = document.getElementById('categoryButtons');
+    categories.forEach(cat => {
+      const btn = document.createElement('button');
+      btn.textContent = cat;
+      btn.onclick = () => {
+        document.querySelectorAll(".buttons button").forEach(b => b.classList.remove("active"));
+        btn.classList.add("active");
+        filterResources(cat);
+      };
+      container.appendChild(btn);
+    });
+  }
+
+  function displayResources(items) {
+    const list = document.getElementById('resourceList');
+    list.innerHTML = "";
+    items.forEach(item => {
+      const div = document.createElement("div");
+      div.className = "resource";
+      div.innerHTML = `
+        <strong>${item.title}</strong><br>
+        <em>Type:</em> ${item.type} <br>
+        <em>Category:</em> ${item.category} <br>
+        <a href="${item.link}" target="_blank">Open Resource</a><br>
+        <small>${item.description}</small>
+      `;
+      list.appendChild(div);
+    });
+  }
+
+  function filterResources(category) {
+    if (category === "All") {
+      displayResources(resources);
+    } else {
+      displayResources(resources.filter(r => r.category === category));
+    }
+  }
+</script>
+
+</body>
+</html>
